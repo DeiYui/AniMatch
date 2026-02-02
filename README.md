@@ -5,7 +5,7 @@
 ## 📖 Overview
 **AniMatch** is a logic-focused AI assistant designed to solve the "Choice Paralysis" problem. Instead of filtering by traditional genres, it recommends Anime based on the user's **emotional context** (e.g., *"I want something intense but not too complex"*).
 
-This project demonstrates the application of **Vector Space Models** and **Cosine Similarity** to build a personalized recommendation engine from scratch, without relying on external "black-box" AI libraries.
+This project demonstrates the application of **Vector Space Models** and **Cosine Similarity** to build a personalized recommendation engine from scratch.
 
 ---
 
@@ -14,7 +14,7 @@ This project demonstrates the application of **Vector Space Models** and **Cosin
 The system treats every Anime and User Preference as a vector in a 5-dimensional space:
 $$V = [Romance, Action, Drama, Complexity, Visuals]$$
 
-To find the best match, we calculate the **Cosine Similarity** between the User Vector ($A$) and each Anime Vector ($B$):
+To find the best match, i calculate the **Cosine Similarity** between the User Vector ($A$) and each Anime Vector ($B$):
 
 $$Similarity = \cos(\theta) = \frac{A \cdot B}{\|A\| \|B\|}$$
 
