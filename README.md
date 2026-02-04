@@ -1,4 +1,5 @@
 # AniMatch AI - Context-Aware Anime Recommender
+**English** | [日本語 (For Japanese description)](./README.ja.md)
 
 ![Status](https://img.shields.io/badge/Status-Prototype-blue) ![Tech](https://img.shields.io/badge/Tech-Next.js_TypeScript-black) ![Logic](https://img.shields.io/badge/Logic-Vector_Space_Model-purple)
 
