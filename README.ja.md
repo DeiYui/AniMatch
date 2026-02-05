@@ -82,8 +82,6 @@ npm install
 ```bash
 npm run dev
 
-```
-
 3. ブラウザで [http://localhost:3000](https://www.google.com/search?q=http://localhost:3000) を開いてアプリケーションを確認してください。
 
 ```
