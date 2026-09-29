@@ -149,14 +149,16 @@ Resolved open questions. These refine the sections above. Where they differ, thi
 
 ### Data & vectors
 
-1. **Franchise.** Fetch `relations` (SEQUEL, PREQUEL, PARENT, SIDE_STORY) and `synonyms`. Group related titles within the dataset into a `franchiseId`. If a title has a PREQUEL that is in the dataset, apply a small penalty, so we recommend where to start instead of season 3.
+1. **Franchise.** Fetch `relations` (SEQUEL, PREQUEL, PARENT, SIDE_STORY) and `synonyms`. Group related titles within the dataset into a `franchiseId`. If a title has a PREQUEL that is in the dataset, apply a small penalty (-0.05), so we recommend where to start instead of season 3. About 27% of titles get this penalty.
 2. **Genres** count as rank 60, so broad genres don't overpower specific tags.
 3. **`heavy`** = 70% tags + 30% runtime component (episodes × duration), computed in `vectorize.ts`. Constants go at the top of the file.
 4. **Vector computation:**
    - Ignore tags with rank < 40.
    - Don't clamp while summing.
-   - After all titles are computed, divide each dimension by its dataset 95th percentile, then clamp to 0..1.
-   - Tune the diversity threshold after seeing real data.
+   - After all titles are computed, divide each dimension by its dataset 99th percentile, then clamp to 0..1. (p95 was tried first, but it left ~50 titles per dimension tied at 1.0.)
+   - Diversity threshold: start at cosine > 0.95. In the first dataset, 1.7% of cross-franchise pairs were above it.
+   - `Tragedy` is on ~37% of titles, so it gets moderate weights (cry 0.5, dark 0.5).
+   - Ecchi / harem / sexual tags are not mapped, so they never raise `laugh` or `romance`.
 
 ### Context & avoid
 
@@ -164,6 +166,7 @@ Resolved open questions. These refine the sections above. Where they differ, thi
    - Each key maps to AniList genres/tags.
    - `Context.avoid` is a Zod enum of these keys, and the enum list goes into the LLM prompt.
    - The rules parser's JP keyword → key dictionary lives in the same file.
+   - A tag counts from rank 40 by default. Keys whose tags AniList applies loosely use a higher threshold: gore 60, harem 60, tragedy 70. `cgi` uses only `Full CGI`.
    - Reviewed by the human together with `tagMapping.ts`.
 6. **Rules parser.** Detect negation patterns first (〜は嫌, 〜はいや, 〜なし, 〜以外, 〜じゃない). Send matches to `avoid` and remove those spans before mood detection. Mood weight is fixed at 1.0.
 7. **company.** Only `family` affects ranking in v2. `partner`/`friends` appear in chips and explanations only.
@@ -187,17 +190,18 @@ Resolved open questions. These refine the sections above. Where they differ, thi
     - If still fewer than 3, show fewer results.
     - Whenever relaxed, show 「条件を少しゆるめました」.
 13. **Short series bonus.** +0.05 when `timeBudgetMin` is set and episodes ≤ 13.
-14. **Family filter.** Exclude titles where Gore, Nudity, Sexual Content (or similar AniList tags) have rank ≥ 50, plus the Ecchi and Horror genres. The list lives in `avoidMap.ts`.
+14. **Safe by default.** The Ecchi genre is excluded from every result set, whatever the Context says, because the demo audience is managers. Like the other safety filters, it is never relaxed. Configured as `DEFAULT_EXCLUDE_GENRES` in `avoidMap.ts`.
+15. **Family filter.** Exclude titles where Gore, Nudity, Sexual Content (or similar AniList tags) have rank ≥ 50, plus the Ecchi and Horror genres. The list lives in `avoidMap.ts`.
 
 ### LLM, UI, eval, ops
 
-15. **Language.** UI, chips and reasons are always Japanese. Input can be any language.
-16. **LLM timeout** comes from `LLM_TIMEOUT_MS` (default 3000). Use the lowest thinking level the model supports. Pick the final value from eval latency.
-17. **Eval scoring:**
+16. **Language.** UI, chips and reasons are always Japanese. Input can be any language.
+17. **LLM timeout** comes from `LLM_TIMEOUT_MS` (default 3000). Use the lowest thinking level the model supports. Pick the final value from eval latency.
+18. **Eval scoring:**
     - moods: correct if the primary mood matches, and also report Jaccard for the mood set. Ignore weights.
     - energy, company, timeBudgetMin: exact match.
     - avoid: set match.
-18. **Ops.** No deploy for now, the demo runs locally. 👍/👎 is logged to a local JSONL file behind a small logger interface so it can be swapped later.
+19. **Ops.** No deploy for now, the demo runs locally. 👍/👎 is logged to a local JSONL file behind a small logger interface so it can be swapped later.
 
 ### Implementation notes
 

@@ -6,7 +6,7 @@ import { DIMENSIONS, zeroVector, type Vector } from "@/lib/vector";
 
 export const GENRE_RANK = 60; // genres have no rank; keep broad genres below strong tags
 export const MIN_TAG_RANK = 40; // weaker tags are noise
-export const NORMALIZE_PERCENTILE = 0.95; // each dim is divided by this percentile over the dataset
+export const NORMALIZE_PERCENTILE = 0.99; // each dim is divided by this percentile over the dataset
 
 // heavy = tags + runtime
 export const HEAVY_TAG_SHARE = 0.7;

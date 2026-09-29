@@ -3,11 +3,12 @@
 //
 // How it's used (src/lib/vectorize.ts):
 //   raw[dim]   = Σ weight × rank/100   (genres count as rank GENRE_RANK, tags below MIN_TAG_RANK are ignored)
-//   final[dim] = clamp(raw[dim] / p95 of that dim over the dataset, 0, 1)
+//   final[dim] = clamp(raw[dim] / p99 of that dim over the dataset, 0, 1)
 //   heavy      = 0.7 × tag part + 0.3 × runtime part
 //
 // Weights are relative within a row. Negative weights pull a dimension down (e.g. Iyashikei → less heavy).
 // Anything not listed here has no effect on vectors. Broad genres like Fantasy / Supernatural are left out on purpose.
+// Ecchi / harem / sexual tags are deliberately NOT mapped, so they never raise laugh or romance (demo audience: managers).
 import type { Dimension } from "@/lib/vector";
 
 export type Weights = Partial<Record<Dimension, number>>;
@@ -38,7 +39,7 @@ export const TAG_WEIGHTS: Record<string, Weights> = {
   Manzai: { laugh: 1.0 },
 
   // --- cry ---
-  Tragedy: { cry: 1.0, dark: 0.4, heavy: 0.3 },
+  Tragedy: { cry: 0.5, dark: 0.5, heavy: 0.3 }, // very common tag (~37% of titles), so kept moderate
   "Coming of Age": { cry: 0.4 },
   "Found Family": { cry: 0.4, relax: 0.2 },
   Afterlife: { cry: 0.5 },
@@ -96,8 +97,6 @@ export const TAG_WEIGHTS: Record<string, Weights> = {
   "Fake Relationship": { romance: 0.6, laugh: 0.3 },
   Marriage: { romance: 0.5 },
   Cohabitation: { romance: 0.3 },
-  "Female Harem": { romance: 0.4, laugh: 0.3 },
-  "Male Harem": { romance: 0.4, laugh: 0.3 },
   Yuri: { romance: 0.5 },
   "Boys' Love": { romance: 0.5 },
 

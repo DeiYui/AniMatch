@@ -1,46 +1,46 @@
-# Vector report (1000 titles)
+# Vector report (1000 titles; 874 recommendable after excluding Ecchi)
 
 ## Names not found in the data
 
 (none)
 
-## p95 scale per dimension (raw value that maps to 1.0)
+## p99 scale per dimension (raw value that maps to 1.0)
 
 | laugh | cry | thrill | relax | think | romance | dark | heavy |
 |---|---|---|---|---|---|---|---|
-| 2.50 | 1.99 | 2.66 | 1.69 | 2.45 | 1.55 | 2.93 | 1.26 |
+| 3.28 | 2.07 | 3.46 | 2.72 | 3.46 | 1.81 | 4.19 | 1.72 |
 
-All-zero vectors: 0. Titles at 1.0 per dim: laugh 50, cry 50, thrill 50, relax 50, think 50, romance 50, dark 50, heavy 6
+All-zero vectors: 0. Titles at 1.0 per dim: laugh 10, cry 10, thrill 10, relax 10, think 10, romance 10, dark 10, heavy 2
 
 ## laugh
 
 | # | Title | final (raw) | Top contributors |
 |---|---|---|---|
 | 1 | My Deer Friend Nokotan | 1.00 (4.32) | Surreal Comedy 98, Slapstick 92, Parody 80 |
-| 2 | The 100 Girlfriends Who Really, Really, Really, Really, REALLY Love You Season 2 | 1.00 (3.91) | Parody 95, Surreal Comedy 93, Slapstick 90 |
-| 3 | Gintama | 1.00 (3.80) | Parody 95, Slapstick 88, Surreal Comedy 87 |
-| 4 | The 100 Girlfriends Who Really, Really, Really, Really, REALLY Love You | 1.00 (3.71) | Surreal Comedy 93, Parody 91, Slapstick 80 |
-| 5 | Ouran High School Host Club | 1.00 (3.65) | Parody 87, Surreal Comedy 87, Comedy |
-| 6 | Uncle from Another World | 1.00 (3.57) | Parody 94, Surreal Comedy 78, Slapstick 66 |
-| 7 | Asobi Asobase - workshop of fun - | 1.00 (3.52) | Surreal Comedy 96, Slapstick 96, Parody 77 |
-| 8 | Gabriel DropOut | 1.00 (3.51) | Surreal Comedy 84, Slapstick 84, Parody 65 |
-| 9 | Nichijou - My Ordinary Life | 1.00 (3.49) | Surreal Comedy 97, Slapstick 94, Parody 76 |
-| 10 | To Love Ru | 1.00 (3.45) | Slapstick 89, Surreal Comedy 88, Parody 80 |
+| 2 | Gintama | 1.00 (3.80) | Parody 95, Slapstick 88, Surreal Comedy 87 |
+| 3 | Asobi Asobase - workshop of fun - | 1.00 (3.52) | Surreal Comedy 96, Slapstick 96, Parody 77 |
+| 4 | Gabriel DropOut | 1.00 (3.51) | Surreal Comedy 84, Slapstick 84, Parody 65 |
+| 5 | Nichijou - My Ordinary Life | 1.00 (3.49) | Surreal Comedy 97, Slapstick 94, Parody 76 |
+| 6 | Uncle from Another World | 1.00 (3.38) | Parody 94, Surreal Comedy 78, Slapstick 66 |
+| 7 | The Disastrous Life of Saiki K. | 1.00 (3.37) | Surreal Comedy 95, Parody 87, Comedy |
+| 8 | Kaguya-sama: Love is War -Ultra Romantic- | 1.00 (3.28) | Slapstick 86, Surreal Comedy 79, Parody 68 |
+| 9 | Ouran High School Host Club | 0.99 (3.24) | Parody 87, Surreal Comedy 87, Comedy |
+| 10 | WITCH WATCH | 0.98 (3.21) | Slapstick 95, Surreal Comedy 86, Parody 80 |
 
 ## cry
 
 | # | Title | final (raw) | Top contributors |
 |---|---|---|---|
-| 1 | Fruits Basket The Final Season | 1.00 (2.99) | Tragedy 82, Found Family 92, Drama |
-| 2 | Haibane Renmei | 1.00 (2.83) | Tragedy 85, Afterlife 85, Found Family 91 |
-| 3 | Your lie in April | 1.00 (2.70) | Tragedy 92, Drama, Coming of Age 88 |
-| 4 | Fruits Basket Season 2 | 1.00 (2.63) | Tragedy 83, Drama, Coming of Age 89 |
-| 5 | A Silent Voice | 1.00 (2.61) | Tragedy 76, Disability 96, Drama |
-| 6 | Clannad: After Story | 1.00 (2.60) | Tragedy 93, Coming of Age 95, Parenthood 92 |
-| 7 | DARLING in the FRANXX | 1.00 (2.57) | Tragedy 82, Drama, Coming of Age 85 |
-| 8 | Maquia: When the Promised Flower Blooms | 1.00 (2.52) | Tragedy 83, Parenthood 100, Coming of Age 94 |
-| 9 | Angel Beats! | 1.00 (2.51) | Tragedy 92, Afterlife 97, Drama |
-| 10 | Revolutionary Girl Utena | 1.00 (2.49) | Tragedy 84, Coming of Age 98, Unrequited Love 76 |
+| 1 | Fruits Basket The Final Season | 1.00 (2.58) | Tragedy 82, Found Family 92, Drama |
+| 2 | Haibane Renmei | 1.00 (2.41) | Afterlife 85, Tragedy 85, Found Family 91 |
+| 3 | Your lie in April | 1.00 (2.24) | Tragedy 92, Drama, Coming of Age 88 |
+| 4 | A Silent Voice | 1.00 (2.23) | Disability 96, Tragedy 76, Drama |
+| 5 | Fruits Basket Season 2 | 1.00 (2.21) | Tragedy 83, Drama, Coming of Age 89 |
+| 6 | DARLING in the FRANXX | 1.00 (2.16) | Tragedy 82, Drama, Coming of Age 85 |
+| 7 | Clannad: After Story | 1.00 (2.13) | Tragedy 93, Coming of Age 95, Parenthood 92 |
+| 8 | Maquia: When the Promised Flower Blooms | 1.00 (2.10) | Tragedy 83, Parenthood 100, Coming of Age 94 |
+| 9 | Revolutionary Girl Utena | 1.00 (2.07) | Tragedy 84, Coming of Age 98, Unrequited Love 76 |
+| 10 | Fruits Basket (2019) | 1.00 (2.07) | Found Family 99, Drama, Unrequited Love 70 |
 
 ## thrill
 
@@ -91,63 +91,63 @@ All-zero vectors: 0. Titles at 1.0 per dim: laugh 50, cry 50, thrill 50, relax 5
 
 | # | Title | final (raw) | Top contributors |
 |---|---|---|---|
-| 1 | Rent-a-Girlfriend | 1.00 (2.58) | Love Triangle 93, Romance, Fake Relationship 90 |
-| 2 | Scum's Wish | 1.00 (2.54) | Love Triangle 96, Romance, Fake Relationship 87 |
-| 3 | Rent-a-Girlfriend Season 2 | 1.00 (2.40) | Love Triangle 88, Romance, Fake Relationship 73 |
-| 4 | Revolutionary Girl Utena | 1.00 (2.13) | Romance, Love Triangle 71, Yuri 85 |
-| 5 | Citrus | 1.00 (2.12) | Romance, Love Triangle 74, Yuri 97 |
-| 6 | Nisekoi | 1.00 (2.12) | Love Triangle 96, Romance, Fake Relationship 80 |
-| 7 | I'm Getting Married to a Girl I Hate in My Class | 1.00 (2.05) | Romance, Love Triangle 84, Marriage 86 |
-| 8 | The Quintessential Quintuplets Movie | 1.00 (2.03) | Love Triangle 89, Romance, Marriage 86 |
-| 9 | Love Tyrant | 1.00 (1.99) | Love Triangle 90, Romance, Female Harem 82 |
-| 10 | Bloom Into You | 1.00 (1.99) | Romance, Love Triangle 72, Yuri 98 |
+| 1 | Rent-a-Girlfriend | 1.00 (2.24) | Love Triangle 93, Romance, Fake Relationship 90 |
+| 2 | Revolutionary Girl Utena | 1.00 (2.13) | Romance, Love Triangle 71, Yuri 85 |
+| 3 | Citrus | 1.00 (2.12) | Romance, Love Triangle 74, Yuri 97 |
+| 4 | Rent-a-Girlfriend Season 2 | 1.00 (2.05) | Love Triangle 88, Romance, Fake Relationship 73 |
+| 5 | Bloom Into You | 1.00 (1.99) | Romance, Love Triangle 72, Yuri 98 |
+| 6 | I'm Getting Married to a Girl I Hate in My Class | 1.00 (1.86) | Romance, Love Triangle 84, Marriage 86 |
+| 7 | A Lull in the Sea | 1.00 (1.82) | Love Triangle 92, Romance, Unrequited Love 79 |
+| 8 | Blue Box | 1.00 (1.81) | Romance, Love Triangle 81, Unrequited Love 84 |
+| 9 | Nisekoi | 0.97 (1.75) | Love Triangle 96, Romance, Fake Relationship 80 |
+| 10 | NANA | 0.96 (1.74) | Romance, Love Triangle 80, Unrequited Love 60 |
 
 ## dark
 
 | # | Title | final (raw) | Top contributors |
 |---|---|---|---|
-| 1 | From the New World | 1.00 (6.07) | Horror, Cosmic Horror 72, Body Horror 71 |
-| 2 | Devilman Crybaby | 1.00 (5.92) | Body Horror 90, Gore 88, Cosmic Horror 82 |
-| 3 | The Future Diary | 1.00 (5.54) | Body Horror 79, Gore 78, Horror |
-| 4 | Tokyo Ghoul | 1.00 (4.81) | Gore 90, Body Horror 79, Torture 78 |
-| 5 | Made in Abyss: The Golden City of the Scorching Sun | 1.00 (4.79) | Cosmic Horror 92, Gore 88, Body Horror 85 |
-| 6 | Berserk | 1.00 (4.74) | Cosmic Horror 87, Gore 86, Rape 68 |
-| 7 | Texhnolyze | 1.00 (4.26) | Gore 66, Dystopian 98, Rape 40 |
-| 8 | Attack on Titan Final Season Part 2 | 1.00 (4.17) | Gore 78, Body Horror 73, War 97 |
-| 9 | Uzumaki | 1.00 (4.10) | Cosmic Horror 93, Body Horror 91, Gore 90 |
-| 10 | Neon Genesis Evangelion: The End of Evangelion | 1.00 (4.09) | Body Horror 80, Gore 78, Cosmic Horror 75 |
+| 1 | From the New World | 1.00 (6.15) | Horror, Cosmic Horror 72, Body Horror 71 |
+| 2 | Devilman Crybaby | 1.00 (6.02) | Body Horror 90, Gore 88, Cosmic Horror 82 |
+| 3 | The Future Diary | 1.00 (5.63) | Body Horror 79, Gore 78, Horror |
+| 4 | Tokyo Ghoul | 1.00 (4.89) | Gore 90, Body Horror 79, Torture 78 |
+| 5 | Made in Abyss: The Golden City of the Scorching Sun | 1.00 (4.89) | Cosmic Horror 92, Gore 88, Body Horror 85 |
+| 6 | Berserk | 1.00 (4.84) | Cosmic Horror 87, Gore 86, Rape 68 |
+| 7 | Texhnolyze | 1.00 (4.35) | Gore 66, Tragedy 87, Dystopian 98 |
+| 8 | Attack on Titan Final Season Part 2 | 1.00 (4.27) | Gore 78, Body Horror 73, War 97 |
+| 9 | Uzumaki | 1.00 (4.19) | Cosmic Horror 93, Body Horror 91, Gore 90 |
+| 10 | Neon Genesis Evangelion: The End of Evangelion | 1.00 (4.19) | Body Horror 80, Gore 78, Cosmic Horror 75 |
 
 ## heavy
 
 | # | Title | final (raw) | Top contributors |
 |---|---|---|---|
-| 1 | ONE PIECE | 1.00 (1.61) | War 77, Ensemble Cast 93, Tragedy 81 (1180×24min) |
-| 2 | Fullmetal Alchemist: Brotherhood | 1.00 (1.69) | War 90, Tragedy 89, Politics 84 (64×25min) |
-| 3 | Naruto: Shippuden | 1.00 (1.72) | War 81, Tragedy 83, Achronological Order 60 (500×23min) |
-| 4 | Monster | 1.00 (1.65) | Philosophy 91, Ensemble Cast 90, Tragedy 86 (74×24min) |
-| 5 | Eureka Seven | 1.00 (1.44) | War 77, Politics 85, Philosophy 84 (50×24min) |
-| 6 | Legend of the Galactic Heroes | 1.00 (1.87) | War 98, Politics 98, Ensemble Cast 89 (110×26min) |
-| 7 | Revolutionary Girl Utena | 1.00 (1.52) | Philosophy 94, Ensemble Cast 86, Tragedy 84 (39×23min) |
-| 8 | Fullmetal Alchemist | 0.93 (1.14) | War 74, Philosophy 90, Tragedy 88 (51×25min) |
-| 9 | Monogatari Series Second Season | 0.93 (1.50) | Achronological Order 81, Ensemble Cast 92, Philosophy 89 (26×26min) |
-| 10 | Gurren Lagann | 0.92 (1.41) | War 75, Philosophy 78, Tragedy 76 (27×24min) |
+| 1 | Naruto: Shippuden | 1.00 (1.72) | War 81, Tragedy 83, Achronological Order 60 (500×23min) |
+| 2 | Legend of the Galactic Heroes | 1.00 (1.87) | War 98, Politics 98, Ensemble Cast 89 (110×26min) |
+| 3 | Fullmetal Alchemist: Brotherhood | 0.98 (1.69) | War 90, Tragedy 89, Politics 84 (64×25min) |
+| 4 | Monster | 0.97 (1.65) | Philosophy 91, Ensemble Cast 90, Tragedy 86 (74×24min) |
+| 5 | ONE PIECE | 0.95 (1.61) | War 77, Ensemble Cast 93, Tragedy 81 (1180×24min) |
+| 6 | Revolutionary Girl Utena | 0.92 (1.52) | Philosophy 94, Ensemble Cast 86, Tragedy 84 (39×23min) |
+| 7 | Code Geass: Lelouch of the Rebellion R2 | 0.90 (1.72) | War 93, Politics 85, Tragedy 83 (25×24min) |
+| 8 | Penguindrum | 0.89 (1.85) | Philosophy 97, Tragedy 89, Ensemble Cast 87 (24×24min) |
+| 9 | From the New World | 0.89 (1.83) | Politics 100, War 74, Philosophy 88 (25×23min) |
+| 10 | Eureka Seven | 0.88 (1.44) | War 77, Politics 85, Philosophy 84 (50×24min) |
 
 ## Sanity check
 
 | Title | laugh | cry | thrill | relax | think | romance | dark | heavy |
 |---|---|---|---|---|---|---|---|---|
-| Your Name. | 0.00 | 0.70 | 0.00 | 0.17 | 0.32 | 0.39 | 0.10 | 0.33 |
-| Attack on Titan | 0.00 | 0.93 | 1.00 | 0.12 | 0.59 | 0.00 | 1.00 | 0.73 |
-| Frieren: Beyond Journey’s End | 0.00 | 0.34 | 0.11 | 0.91 | 0.27 | 0.00 | 0.00 | 0.29 |
-| Death Note | 0.00 | 0.54 | 0.40 | 0.00 | 1.00 | 0.23 | 0.55 | 0.79 |
-| SPY x FAMILY | 1.00 | 0.58 | 0.84 | 0.97 | 0.67 | 0.64 | 0.11 | 0.15 |
-| K-ON! | 0.64 | 0.14 | 0.00 | 1.00 | 0.00 | 0.00 | 0.00 | 0.10 |
-| Laid-Back Camp | 0.35 | 0.00 | 0.00 | 1.00 | 0.00 | 0.00 | 0.00 | 0.10 |
-| Kaguya-sama: Love is War | 1.00 | 0.00 | 0.00 | 0.48 | 0.17 | 0.39 | 0.08 | 0.13 |
+| Your Name. | 0.00 | 0.50 | 0.00 | 0.10 | 0.23 | 0.33 | 0.08 | 0.25 |
+| Attack on Titan | 0.00 | 0.68 | 0.93 | 0.07 | 0.41 | 0.00 | 0.79 | 0.59 |
+| Frieren: Beyond Journey’s End | 0.00 | 0.33 | 0.09 | 0.56 | 0.19 | 0.00 | 0.00 | 0.27 |
+| Death Note | 0.00 | 0.38 | 0.31 | 0.00 | 1.00 | 0.19 | 0.40 | 0.65 |
+| SPY x FAMILY | 0.90 | 0.56 | 0.64 | 0.61 | 0.47 | 0.55 | 0.08 | 0.13 |
+| K-ON! | 0.48 | 0.14 | 0.00 | 1.00 | 0.00 | 0.00 | 0.00 | 0.10 |
+| Laid-Back Camp | 0.27 | 0.00 | 0.00 | 1.00 | 0.00 | 0.00 | 0.00 | 0.10 |
+| Kaguya-sama: Love is War | 0.91 | 0.00 | 0.00 | 0.30 | 0.12 | 0.33 | 0.06 | 0.12 |
 
 ## Diversity preview (pairs from different franchises)
 
-cosine > 0.90: 5.73%, > 0.95: 1.69%, > 0.98: 0.28%
+cosine > 0.90: 5.67%, > 0.95: 1.61%, > 0.98: 0.25%
 
 ## Franchises
 
@@ -161,21 +161,23 @@ Largest groups:
 - 8: JoJo's Bizarre Adventure (TV) / JoJo's Bizarre Adventure: Stardust Crusaders / JoJo's Bizarre Adventure: Diamond is Unbreakable / JoJo's Bizarre Adventure: Golden Wind / JoJo's Bizarre Adventure: Stardust Crusaders - Battle in Egypt / JoJo's Bizarre Adventure: STONE OCEAN / …
 - 8: Fate/Zero / Fate/stay night: Unlimited Blade Works / Fate/Zero Season 2 / Fate/stay night: Unlimited Blade Works 2nd Season / Fate/stay night / Fate/stay night [Heaven's Feel] I. presage flower / …
 
-## Avoid keys: titles excluded
+## Titles excluded
 
-| Key | Label | Excluded |
-|---|---|---|
-| horror | ホラー | 158 |
-| gore | グロ | 283 |
-| ecchi | お色気 | 251 |
-| tragedy | 悲劇・鬱展開 | 392 |
-| romance | 恋愛 | 362 |
-| sports | スポーツ | 36 |
-| mecha | ロボット | 37 |
-| isekai | 異世界 | 184 |
-| harem | ハーレム | 238 |
-| idol-music | アイドル・音楽 | 46 |
-| war | 戦争 | 175 |
-| cgi | 3DCG | 151 |
-| long-series | 長編 | 51 |
-| (family filter) | 家族向け | 418 |
+Default (Ecchi): 126 of 1000.
+
+| Key | Label | of all 1000 | of 874 recommendable |
+|---|---|---|---|
+| horror | ホラー | 158 | 143 |
+| gore | グロ | 192 | 181 |
+| ecchi | お色気 | 251 | 125 |
+| tragedy | 悲劇・鬱展開 | 270 | 256 |
+| romance | 恋愛 | 362 | 289 |
+| sports | スポーツ | 36 | 34 |
+| mecha | ロボット | 37 | 30 |
+| isekai | 異世界 | 184 | 152 |
+| harem | ハーレム | 173 | 99 |
+| idol-music | アイドル・音楽 | 46 | 43 |
+| war | 戦争 | 175 | 162 |
+| cgi | 3DCG | 10 | 10 |
+| long-series | 長編 | 51 | 51 |
+| (family filter) | 家族向け | 418 | 292 |

@@ -3,12 +3,14 @@
 // Run: npm run report:vectors
 import { DATASET, type Title } from "../src/lib/dataset";
 import { GENRE_WEIGHTS, TAG_WEIGHTS } from "../src/data/tagMapping";
-import { AVOID_KEYS, AVOID_MAP, FAMILY_EXCLUDE } from "../src/data/avoidMap";
-import { matchesAvoid, isFamilyUnsafe } from "../src/lib/engine/filters";
-import { vectorizeAll, rawVector, GENRE_RANK, MIN_TAG_RANK } from "../src/lib/vectorize";
+import { AVOID_KEYS, AVOID_MAP, DEFAULT_EXCLUDE_GENRES, FAMILY_EXCLUDE } from "../src/data/avoidMap";
+import { matchesAvoid, isExcludedByDefault, isFamilyUnsafe } from "../src/lib/engine/filters";
+import { vectorizeAll, rawVector, GENRE_RANK, MIN_TAG_RANK, NORMALIZE_PERCENTILE } from "../src/lib/vectorize";
 import { DIMENSIONS, cosineSimilarity, type Dimension } from "../src/lib/vector";
 
 const { titles } = DATASET;
+// Titles that can actually be recommended (safe-by-default policy applied).
+const pool = titles.filter((t) => !isExcludedByDefault(t));
 const name = (t: Title) => t.title.english ?? t.title.romaji ?? t.title.native ?? String(t.id);
 const f2 = (x: number) => x.toFixed(2);
 
@@ -42,12 +44,12 @@ const unknown = [
   ]),
   ...FAMILY_EXCLUDE.tags.filter((t) => !tagsInData.has(t)).map((t) => `family: tag "${t}"`),
 ];
-console.log(`# Vector report (${titles.length} titles)\n`);
+console.log(`# Vector report (${titles.length} titles; ${pool.length} recommendable after excluding ${DEFAULT_EXCLUDE_GENRES.join(", ")})\n`);
 console.log(`## Names not found in the data\n\n${unknown.length ? unknown.map((u) => `- ${u}`).join("\n") : "(none)"}\n`);
 
 // 2. Normalization scale.
 const { scale } = vectorizeAll(titles);
-console.log("## p95 scale per dimension (raw value that maps to 1.0)\n");
+console.log(`## p${Math.round(NORMALIZE_PERCENTILE * 100)} scale per dimension (raw value that maps to 1.0)\n`);
 console.log(`| ${DIMENSIONS.join(" | ")} |\n|${DIMENSIONS.map(() => "---").join("|")}|`);
 console.log(`| ${DIMENSIONS.map((d) => f2(scale[d])).join(" | ")} |\n`);
 const zeros = titles.filter((t) => DIMENSIONS.every((d) => t.vector[d] === 0));
@@ -55,12 +57,12 @@ const saturated = DIMENSIONS.map((d) => `${d} ${titles.filter((t) => t.vector[d]
 console.log(`All-zero vectors: ${zeros.length}. Titles at 1.0 per dim: ${saturated.join(", ")}\n`);
 
 // 3. Top 10 per dimension. Many titles clamp to 1.0, so rank by the raw (pre-normalization) value.
-// heavy also includes runtime, so it is ranked by its final value.
+// heavy also includes runtime, so it is ranked by its final value. Default-excluded titles are left out.
 const raws = new Map(titles.map((t) => [t.id, rawVector(t)]));
 for (const dim of DIMENSIONS) {
   const key = (t: Title) => (dim === "heavy" ? t.vector[dim] : raws.get(t.id)![dim]);
   console.log(`## ${dim}\n\n| # | Title | final (raw) | Top contributors |\n|---|---|---|---|`);
-  [...titles]
+  [...pool]
     .sort((a, b) => key(b) - key(a) || b.popularity - a.popularity)
     .slice(0, 10)
     .forEach((t, i) => {
@@ -102,6 +104,11 @@ for (const g of multi.slice(0, 5)) console.log(`- ${g.length}: ${g.slice(0, 6).m
 console.log();
 
 // 7. Avoid / family coverage.
-console.log("## Avoid keys: titles excluded\n\n| Key | Label | Excluded |\n|---|---|---|");
-for (const k of AVOID_KEYS) console.log(`| ${k} | ${AVOID_MAP[k].label} | ${titles.filter((t) => matchesAvoid(t, k)).length} |`);
-console.log(`| (family filter) | 家族向け | ${titles.filter(isFamilyUnsafe).length} |`);
+const count = (list: Title[], pred: (t: Title) => boolean) => list.filter(pred).length;
+console.log(`## Titles excluded\n\nDefault (${DEFAULT_EXCLUDE_GENRES.join(", ")}): ${count(titles, isExcludedByDefault)} of ${titles.length}.\n`);
+console.log(`| Key | Label | of all ${titles.length} | of ${pool.length} recommendable |\n|---|---|---|---|`);
+for (const k of AVOID_KEYS) {
+  const pred = (t: Title) => matchesAvoid(t, k);
+  console.log(`| ${k} | ${AVOID_MAP[k].label} | ${count(titles, pred)} | ${count(pool, pred)} |`);
+}
+console.log(`| (family filter) | 家族向け | ${count(titles, isFamilyUnsafe)} | ${count(pool, isFamilyUnsafe)} |`);

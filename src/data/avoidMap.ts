@@ -4,6 +4,7 @@
 // Reviewed by the human together with tagMapping.ts.
 
 // A tag counts as present at or above this rank (genres have no rank; they always count).
+// Individual keys can raise it with `minTagRank` when AniList applies the tag loosely.
 export const AVOID_MIN_TAG_RANK = 40;
 
 // Series longer than this count as "long-series".
@@ -31,6 +32,7 @@ type AvoidRule = {
   label: string; // Japanese label for chips, e.g. 「ホラーなし」
   genres?: string[];
   tags?: string[];
+  minTagRank?: number; // overrides AVOID_MIN_TAG_RANK for this key
   maxEpisodes?: number; // excludes titles with more episodes than this
   keywords: string[]; // JP keywords for the rules parser (matched inside negated spans)
 };
@@ -45,6 +47,7 @@ export const AVOID_MAP: Record<AvoidKey, AvoidRule> = {
   gore: {
     label: "グロ",
     tags: ["Gore", "Body Horror", "Torture", "Cannibalism"],
+    minTagRank: 60,
     keywords: ["グロ", "流血", "血", "残酷", "エグい"],
   },
   ecchi: {
@@ -56,6 +59,7 @@ export const AVOID_MAP: Record<AvoidKey, AvoidRule> = {
   tragedy: {
     label: "悲劇・鬱展開",
     tags: ["Tragedy", "Suicide"],
+    minTagRank: 70, // Tragedy is on ~37% of titles at rank 40+
     keywords: ["鬱", "うつ", "悲しい", "泣ける", "泣く", "悲劇", "つらい", "辛い"],
   },
   romance: {
@@ -82,6 +86,7 @@ export const AVOID_MAP: Record<AvoidKey, AvoidRule> = {
   harem: {
     label: "ハーレム",
     tags: ["Female Harem", "Male Harem", "Mixed Gender Harem"],
+    minTagRank: 60,
     keywords: ["ハーレム"],
   },
   "idol-music": {
@@ -97,7 +102,7 @@ export const AVOID_MAP: Record<AvoidKey, AvoidRule> = {
   },
   cgi: {
     label: "3DCG",
-    tags: ["Full CGI", "CGI"],
+    tags: ["Full CGI"], // plain "CGI" only means partial CG use
     keywords: ["CG", "ＣＧ", "3D"],
   },
   "long-series": {
@@ -106,6 +111,9 @@ export const AVOID_MAP: Record<AvoidKey, AvoidRule> = {
     keywords: ["長編", "長いの", "長いやつ", "長いアニメ", "長い"],
   },
 };
+
+// Safe by default: always excluded from results, whatever the Context says. Never relaxed.
+export const DEFAULT_EXCLUDE_GENRES = ["Ecchi"];
 
 // Family filter (company === "family"): never relaxed.
 export const FAMILY_EXCLUDE = {
