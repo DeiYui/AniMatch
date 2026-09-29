@@ -11,7 +11,8 @@
     "fetch:anilist": "tsx scripts/fetch-anilist.ts",
     "report:vectors": "tsx scripts/report-vectors.ts",
     "test": "tsx --test \"src/**/*.test.ts\"",
-    "try": "tsx scripts/try.ts"
+    "try": "tsx scripts/try.ts",
+    "showcase": "tsx scripts/showcase.ts"
   },
   "dependencies": {
     "@google/genai": "^2.24.0",

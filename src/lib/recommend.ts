@@ -4,7 +4,7 @@ import { DATASET } from "@/lib/dataset";
 import { parseContext } from "@/lib/context/parse";
 import { contextToQuery } from "@/lib/engine/query";
 import { rank, TOP_K } from "@/lib/engine/rank";
-import { explain } from "@/lib/engine/explain";
+import { explain, formatRuntime } from "@/lib/engine/explain";
 import { displayTitle } from "@/lib/labels";
 import type { RecommendRequest, RecommendResponse } from "@/lib/api";
 
@@ -33,7 +33,8 @@ export async function recommend(request: RecommendRequest): Promise<RecommendRes
       format: r.title.format,
       episodes: r.title.episodes,
       duration: r.title.duration,
-      reasons: explain(r, query, relaxed),
+      runtime: formatRuntime(r.title),
+      reasons: explain(r, query),
       score: r.score,
     })),
   };

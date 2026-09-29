@@ -22,7 +22,8 @@ export type Recommendation = {
   format: (typeof FORMATS)[number];
   episodes: number;
   duration: number;
-  reasons: string[];
+  runtime: string; // e.g. 「1話24分 × 12話」
+  reasons: string[]; // at most 3
   score: ScoreBreakdown;
 };
 

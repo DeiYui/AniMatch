@@ -174,10 +174,10 @@ Resolved open questions. These refine the sections above. Where they differ, thi
 ### Ranking
 
 8. **Re-rank on the server.** `POST /api/recommend` accepts either `{ text }` or `{ context }`. Editing chips sends `{ context }` and skips parsing.
-9. **energy:**
-   - `low` → heavy target 0, plus an explicit penalty `score -= heavy × 0.3`.
-   - `mid` → heavy target 0.4, no penalty.
-   - `high` → heavy target 0.7, no penalty.
+9. **energy.** `heavy` is never part of the target or the cosine (see "Scoring, revised" below). Energy acts only through a separate term:
+   - `low` → `score -= heavy × 0.3`.
+   - `mid` → nothing.
+   - `high` → `score += heavy × 0.1` (small bonus).
 10. **referenceTitle:**
     - Normalize (NFKC, lowercase, strip spaces/punctuation) and match against native/romaji/english/synonyms. Exact match first, then substring. No fuzzy library.
     - Target = 0.5 moods + 0.5 reference, or 0.8 reference if moods are only the default.
@@ -185,13 +185,37 @@ Resolved open questions. These refine the sections above. Where they differ, thi
     - Exclude the reference title and its whole franchise from results.
 11. **averageScore** is divided by 100. `null` → dataset median.
 12. **Fewer than 3 results after filters.**
-    - Never relax safety filters (family, avoid).
-    - Relax only the time budget: first allow series where one episode fits, then drop the budget entirely.
+    - Never relax safety filters (safe-by-default, family, avoid, the reference's franchise).
+    - The time filter is "a movie fits, or one episode of a series fits" (the rule from the Ranking section).
+    - Relax soft constraints in this order:
+      1. The primary-mood floor (a system heuristic, so it goes before anything the user said).
+      2. The time budget. Titles that fit are still ranked first, then the rest fill the remaining slots.
     - If still fewer than 3, show fewer results.
     - Whenever relaxed, show 「条件を少しゆるめました」.
-13. **Short series bonus.** +0.05 when `timeBudgetMin` is set and episodes ≤ 13.
+13. **Short series bonus.** +0.05 when a time budget is being applied and the title is a series with ≤ 13 episodes. No bonus for movies. No bonus once the time budget has been dropped.
 14. **Safe by default.** The Ecchi genre is excluded from every result set, whatever the Context says, because the demo audience is managers. Like the other safety filters, it is never relaxed. Configured as `DEFAULT_EXCLUDE_GENRES` in `avoidMap.ts`.
 15. **Family filter.** Exclude titles where Gore, Nudity, Sexual Content (or similar AniList tags) have rank ≥ 50, plus the Ecchi and Horror genres. The list lives in `avoidMap.ts`.
+
+### Scoring, revised after the first real results
+
+The first run showed that the cosine rewards *well-aligned but weak* titles. For 「泣ける」, a title with only cry 0.29 beat Your lie in April (cry 1.0), because extra dimensions such as romance lower the cosine. `heavy` in the target made up about 1/3 of its direction. Fixes:
+
+- **heavy out of the cosine.** The cosine is computed over the 7 mood dimensions only. `heavy` only enters through the energy term (Decision 9).
+- **Intensity term**, so strong titles win and not just aligned ones:
+  - `intensity` = weighted average of the title's values on the target's mood dimensions, weighted by the target. Without a reference, the target equals the context mood weights. With a reference, it is the blended target.
+  - `score = 0.5 × cosine + 0.3 × intensity + 0.2 × quality`, then energy, prequel and short-series adjustments. The constants are at the top of `rank.ts`.
+- **Primary-mood floor (soft).** The title's value on `moods[0]` must be ≥ 0.3. It doesn't apply when moods are only the default. It is relaxed first when fewer than 3 results remain (Decision 12).
+- **Reasons.** At most 3 per card, taken in priority order:
+  1. Strongest mood
+  2. Reference
+  3. The user's constraints (time fit, 重い展開 when energy is low, family, avoid, 見ごたえ when energy is high)
+  4. Second mood
+  5. Sequel caveat
+  6. Short series
+  7. AniList score
+
+  Runtime (「1話24分 × 12話」) is shown on the card itself, not as a reason.
+- **Benchmark.** `npm run showcase` runs the 6 fixed sentences. Compare its output before and after every scoring or mapping change.
 
 ### LLM, UI, eval, ops
 

@@ -4,25 +4,30 @@
 export const DIMENSIONS = ["laugh", "cry", "thrill", "relax", "think", "romance", "dark", "heavy"] as const;
 
 export type Dimension = (typeof DIMENSIONS)[number];
+
+// Everything except heavy. heavy is handled by separate energy terms, never by the cosine.
+export const MOOD_DIMENSIONS = DIMENSIONS.filter((d) => d !== "heavy");
 export type Vector = Record<Dimension, number>;
 
 export const zeroVector = (): Vector =>
   Object.fromEntries(DIMENSIONS.map((d) => [d, 0])) as Vector;
 
-const dotProduct = (a: Vector, b: Vector): number =>
-  DIMENSIONS.reduce((sum, d) => sum + a[d] * b[d], 0);
+type Dims = readonly Dimension[];
 
-const magnitude = (v: Vector): number => Math.sqrt(dotProduct(v, v));
+const dotProduct = (a: Vector, b: Vector, dims: Dims = DIMENSIONS): number =>
+  dims.reduce((sum, d) => sum + a[d] * b[d], 0);
+
+const magnitude = (v: Vector, dims: Dims = DIMENSIONS): number => Math.sqrt(dotProduct(v, v, dims));
 
 /**
- * Cosine similarity in 0..1 (all components are non-negative).
- * Returns 0 if either vector is all zeros, e.g. a title with no mapped tags.
+ * Cosine similarity in 0..1 (all components are non-negative), over `dims` only.
+ * Returns 0 if either vector is all zeros on those dims, e.g. a title with no mapped tags.
  */
-export const cosineSimilarity = (a: Vector, b: Vector): number => {
-  const magA = magnitude(a);
-  const magB = magnitude(b);
+export const cosineSimilarity = (a: Vector, b: Vector, dims: Dims = DIMENSIONS): number => {
+  const magA = magnitude(a, dims);
+  const magB = magnitude(b, dims);
   if (magA === 0 || magB === 0) return 0;
-  return dotProduct(a, b) / (magA * magB);
+  return dotProduct(a, b, dims) / (magA * magB);
 };
 
 export const addVectors = (a: Vector, b: Vector): Vector =>

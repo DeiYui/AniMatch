@@ -146,6 +146,7 @@ export default function V2Home() {
                     <div className="min-w-0">
                       <h3 className="text-xl font-bold text-white">{r.title}</h3>
                       {r.subtitle && r.subtitle !== r.title && <p className="text-sm text-gray-500 truncate">{r.subtitle}</p>}
+                      <p className="text-xs text-gray-400 mt-1">{r.runtime}</p>
                     </div>
                     <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-br from-yellow-300 to-yellow-600">
                       {Math.round(r.score.total * 100)}
@@ -165,7 +166,7 @@ export default function V2Home() {
                     <details>
                       <summary className="cursor-pointer">スコア内訳</summary>
                       <p className="mt-1 font-mono">
-                        類似度 {r.score.similarity.toFixed(3)} + 評価 {r.score.quality.toFixed(3)} + 短編 {r.score.shortSeriesBonus.toFixed(3)} − 重さ {(-r.score.heavyPenalty).toFixed(3)} − 続編 {(-r.score.prequelPenalty).toFixed(3)} = {r.score.total.toFixed(3)}
+                        方向 {r.score.similarity.toFixed(3)} + 強さ {r.score.strength.toFixed(3)} + 評価 {r.score.quality.toFixed(3)} + 気力 {r.score.energy.toFixed(3)} + 続編 {r.score.prequelPenalty.toFixed(3)} + 短編 {r.score.shortSeriesBonus.toFixed(3)} = {r.score.total.toFixed(3)}
                       </p>
                     </details>
                   </div>
