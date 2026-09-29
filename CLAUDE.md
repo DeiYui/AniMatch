@@ -14,13 +14,18 @@ The v1 files (`src/data/animeList.ts`, the slider UI in `src/app/page.tsx`) stay
 ## Commands
 
 ```bash
-npm run dev     # dev server at http://localhost:3000
+npm run dev     # dev server at http://localhost:3000 (v1 at /, v2 at /v2)
 npm run build   # production build (also type-checks)
 npm run lint    # ESLint (next core-web-vitals + typescript configs)
-npx tsc --noEmit  # type-check only
+npm run typecheck
+npm test        # node:test via tsx, all src/**/*.test.ts
+npx tsx --test src/lib/context/rules.test.ts   # a single test file
+npm run try -- "仕事で疲れた。30分だけ笑えるやつ"  # full pipeline in the terminal, with score breakdown
+npm run report:vectors   # review aid for tagMapping.ts / avoidMap.ts (top 10 per dimension, filter counts)
+npm run fetch:anilist    # re-fetch src/data/anime.json (slow, rate-limited; rarely needed)
 ```
 
-There is no test runner yet. v2 plans `scripts/eval-context.ts` + `eval/context-cases.json` for parser accuracy and latency evaluation.
+Vectors and franchise groups are computed from `anime.json` at load time, so after editing `tagMapping.ts` / `avoidMap.ts` just rerun the report. No re-fetch needed. Scripts import `src/` through the `@/` alias, which tsx resolves.
 
 ## v1 architecture (what exists now)
 

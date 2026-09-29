@@ -24,3 +24,15 @@ export const cosineSimilarity = (a: Vector, b: Vector): number => {
   if (magA === 0 || magB === 0) return 0;
   return dotProduct(a, b) / (magA * magB);
 };
+
+export const addVectors = (a: Vector, b: Vector): Vector =>
+  Object.fromEntries(DIMENSIONS.map((d) => [d, a[d] + b[d]])) as Vector;
+
+export const scaleVector = (v: Vector, k: number): Vector =>
+  Object.fromEntries(DIMENSIONS.map((d) => [d, v[d] * k])) as Vector;
+
+/** Unit-length copy (or the zero vector unchanged). */
+export const unitVector = (v: Vector): Vector => {
+  const m = magnitude(v);
+  return m === 0 ? v : scaleVector(v, 1 / m);
+};

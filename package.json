@@ -9,7 +9,9 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "fetch:anilist": "tsx scripts/fetch-anilist.ts",
-    "report:vectors": "tsx scripts/report-vectors.ts"
+    "report:vectors": "tsx scripts/report-vectors.ts",
+    "test": "tsx --test \"src/**/*.test.ts\"",
+    "try": "tsx scripts/try.ts"
   },
   "dependencies": {
     "@google/genai": "^2.24.0",
