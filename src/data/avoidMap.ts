@@ -28,87 +28,74 @@ export const AVOID_KEYS = [
 
 export type AvoidKey = (typeof AVOID_KEYS)[number];
 
+// Display labels live in the dictionaries (src/i18n/ja.ts, en.ts → avoid).
 type AvoidRule = {
-  label: string; // Japanese label for chips, e.g. 「ホラーなし」
   genres?: string[];
   tags?: string[];
   minTagRank?: number; // overrides AVOID_MIN_TAG_RANK for this key
   maxEpisodes?: number; // excludes titles with more episodes than this
-  keywords: string[]; // JP keywords for the rules parser (matched inside negated spans)
+  keywords: string[]; // JP + EN keywords for the rules parser (matched inside negated spans only)
 };
 
 export const AVOID_MAP: Record<AvoidKey, AvoidRule> = {
   horror: {
-    label: "ホラー",
     genres: ["Horror"],
     tags: ["Cosmic Horror", "Zombie", "Ghost"],
-    keywords: ["ホラー", "怖い", "こわい", "怖いの", "ゾンビ", "幽霊", "お化け"],
+    keywords: ["ホラー", "怖い", "こわい", "怖いの", "ゾンビ", "幽霊", "お化け", "horror", "scary", "zombie", "ghost"],
   },
   gore: {
-    label: "グロ",
     tags: ["Gore", "Body Horror", "Torture", "Cannibalism"],
     minTagRank: 60,
-    keywords: ["グロ", "流血", "血", "残酷", "エグい"],
+    keywords: ["グロ", "流血", "血", "残酷", "エグい", "gore", "gory", "blood", "bloody", "violence", "violent"],
   },
   ecchi: {
-    label: "お色気",
     genres: ["Ecchi"],
     tags: ["Nudity"],
-    keywords: ["エロ", "エッチ", "お色気", "下ネタ", "セクシー"],
+    keywords: ["エロ", "エッチ", "お色気", "下ネタ", "セクシー", "ecchi", "fan service", "fanservice", "nsfw", "lewd", "sexual"],
   },
   tragedy: {
-    label: "悲劇・鬱展開",
     tags: ["Tragedy", "Suicide"],
     minTagRank: 70, // Tragedy is on ~37% of titles at rank 40+
-    keywords: ["鬱", "うつ", "悲しい", "泣ける", "泣く", "悲劇", "つらい", "辛い"],
+    keywords: ["鬱", "うつ", "悲しい", "泣ける", "泣く", "悲劇", "つらい", "辛い", "sad", "depressing", "tragic", "tragedy", "tearjerker", "crying"],
   },
   romance: {
-    label: "恋愛",
     genres: ["Romance"],
-    keywords: ["恋愛", "ラブコメ", "恋", "ラブ"],
+    keywords: ["恋愛", "ラブコメ", "恋", "ラブ", "romance", "romantic", "love story", "rom-com", "romcom"],
   },
   sports: {
-    label: "スポーツ",
     genres: ["Sports"],
-    keywords: ["スポーツ", "スポ根", "野球", "サッカー", "バスケ", "バレー"],
+    keywords: ["スポーツ", "スポ根", "野球", "サッカー", "バスケ", "バレー", "sports", "sport", "baseball", "soccer", "football", "basketball", "volleyball"],
   },
   mecha: {
-    label: "ロボット",
     genres: ["Mecha"],
     tags: ["Real Robot", "Super Robot"],
-    keywords: ["ロボ", "ロボット", "メカ"],
+    keywords: ["ロボ", "ロボット", "メカ", "mecha", "robot", "giant robot"],
   },
   isekai: {
-    label: "異世界",
     tags: ["Isekai", "Reincarnation"],
-    keywords: ["異世界", "転生"],
+    keywords: ["異世界", "転生", "isekai", "another world", "reincarnation"],
   },
   harem: {
-    label: "ハーレム",
     tags: ["Female Harem", "Male Harem", "Mixed Gender Harem"],
     minTagRank: 60,
-    keywords: ["ハーレム"],
+    keywords: ["ハーレム", "harem"],
   },
   "idol-music": {
-    label: "アイドル・音楽",
     genres: ["Music"],
     tags: ["Idol"],
-    keywords: ["アイドル", "音楽", "歌"],
+    keywords: ["アイドル", "音楽", "歌", "idol", "music", "musical"],
   },
   war: {
-    label: "戦争",
     tags: ["War", "Military"],
-    keywords: ["戦争", "軍隊", "軍事"],
+    keywords: ["戦争", "軍隊", "軍事", "war", "military"],
   },
   cgi: {
-    label: "3DCG",
     tags: ["Full CGI"], // plain "CGI" only means partial CG use
-    keywords: ["CG", "ＣＧ", "3D"],
+    keywords: ["CG", "ＣＧ", "3D", "cgi", "3d", "cg"],
   },
   "long-series": {
-    label: "長編",
     maxEpisodes: LONG_SERIES_EPISODES,
-    keywords: ["長編", "長いの", "長いやつ", "長いアニメ", "長い"],
+    keywords: ["長編", "長いの", "長いやつ", "長いアニメ", "長い", "long series", "long", "too many episodes"],
   },
 };
 

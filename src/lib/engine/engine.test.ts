@@ -9,11 +9,16 @@ import {
   pickDiverse,
   scoreAll,
   HIGH_ENERGY_HEAVY_BONUS,
+  LONG_SERIES_PENALTY,
   LOW_ENERGY_HEAVY_PENALTY,
   PREQUEL_PENALTY,
   SHORT_SERIES_BONUS,
+  ERA_BONUS,
+  POPULARITY_BONUS,
+  REFERENCE_YEAR,
+  MAX_RESULTS,
 } from "@/lib/engine/rank";
-import { explain, formatRuntime, MAX_REASONS } from "@/lib/engine/explain";
+import { explain, MAX_REASONS } from "@/lib/engine/explain";
 import { cosineSimilarity } from "@/lib/vector";
 import { makeContext, makeTitle } from "@/lib/engine/testUtils";
 
@@ -59,7 +64,7 @@ describe("contextToQuery", () => {
   it("reports a reference that isn't in the dataset", () => {
     const q = contextToQuery(makeContext({ referenceTitle: "存在しない作品" }), [makeTitle()]);
     assert.equal(q.reference, null);
-    assert.deepEqual(q.notices, ["『存在しない作品』が見つかりませんでした"]);
+    assert.deepEqual(q.notices, [{ key: "referenceNotFound", title: "存在しない作品" }]);
   });
 });
 
@@ -216,6 +221,25 @@ describe("rank: scoring", () => {
     assert.ok(s.total > w.total);
   });
 
+  it("intensity ignores target dims beyond the top 2, so flat titles don't win", () => {
+    const q = contextToQuery(
+      makeContext({ moods: [{ type: "thrill", weight: 1 }, { type: "dark", weight: 0.8 }, { type: "laugh", weight: 0.3 }] }),
+      [],
+    );
+    const t = makeTitle({ vector: { thrill: 0.5, dark: 0.5, laugh: 1 } });
+    assert.ok(Math.abs(scoreTitle(t, q, MEDIAN).intensity - 0.5) < 1e-9, "laugh (3rd dim) is not counted");
+  });
+
+  it("penalizes 100+ episode series only without a time budget and when energy isn't high", () => {
+    const long = makeTitle({ episodes: 101 });
+    const hundred = makeTitle({ episodes: 100 });
+    assert.equal(scoreTitle(long, contextToQuery(makeContext(), []), MEDIAN).longSeriesPenalty, -LONG_SERIES_PENALTY);
+    assert.equal(scoreTitle(long, contextToQuery(makeContext({ energy: "low" }), []), MEDIAN).longSeriesPenalty, -LONG_SERIES_PENALTY);
+    assert.equal(scoreTitle(hundred, contextToQuery(makeContext(), []), MEDIAN).longSeriesPenalty, 0);
+    assert.equal(scoreTitle(long, contextToQuery(makeContext({ energy: "high" }), []), MEDIAN).longSeriesPenalty, 0);
+    assert.equal(scoreTitle(long, contextToQuery(makeContext({ timeBudgetMin: 30 }), []), MEDIAN).longSeriesPenalty, 0);
+  });
+
   it("intensity is the target-weighted average of the requested moods", () => {
     const q = contextToQuery(makeContext({ moods: [{ type: "laugh", weight: 1 }, { type: "relax", weight: 0.5 }] }), []);
     const t = makeTitle({ vector: { laugh: 0.6, relax: 0.9, dark: 1 } });
@@ -244,30 +268,96 @@ describe("pickDiverse", () => {
     const a = makeTitle({ vector: { laugh: 1 } });
     const sameFranchise = makeTitle({ franchiseId: a.franchiseId, vector: { laugh: 1, cry: 0.5 } });
     const nearDup = makeTitle({ vector: { laugh: 1, relax: 0.05 } }); // cosine ≈ 0.999
+    const similarButDistinct = makeTitle({ vector: { laugh: 1, cry: 0.3 } }); // cosine ≈ 0.958, below 0.97
     const different = makeTitle({ vector: { laugh: 1, thrill: 1 } });
     const q = contextToQuery(makeContext(), []);
-    const sorted = [a, sameFranchise, nearDup, different].map((title) => ({ title, score: scoreTitle(title, q, MEDIAN) }));
-    assert.deepEqual(pickDiverse(sorted).map((r) => r.title.id), [a.id, different.id]);
+    const sorted = [a, sameFranchise, nearDup, similarButDistinct, different].map((title) => ({ title, score: scoreTitle(title, q, MEDIAN) }));
+    assert.deepEqual(pickDiverse(sorted).map((r) => r.title.id), [a.id, similarButDistinct.id, different.id]);
   });
 });
 
 describe("explain", () => {
-  it("formats runtime for movies and series", () => {
-    assert.equal(formatRuntime(makeTitle({ format: "MOVIE", episodes: 1, duration: 107 })), "映画・約107分");
-    assert.equal(formatRuntime(makeTitle({ episodes: 12, duration: 24 })), "1話24分 × 12話");
-  });
-
   it("shows the 3 most informative reasons: strongest mood, then the user's constraints", () => {
     const t = makeTitle({ vector: { laugh: 0.9, relax: 0.5, heavy: 0.1 }, hasPrequelInDataset: true, averageScore: 81 });
     const q = contextToQuery(makeContext({ moods: [{ type: "laugh", weight: 1 }, { type: "relax", weight: 1 }], energy: "low", timeBudgetMin: 30 }), []);
     const reasons = explain({ title: t, score: scoreTitle(t, q, MEDIAN) }, q);
     assert.equal(reasons.length, MAX_REASONS);
-    assert.deepEqual(reasons, ["笑い度：高", "1話が30分以内", "重い展開：ほぼなし"]);
+    assert.deepEqual(reasons, [
+      { key: "mood", dim: "laugh", level: "high" },
+      { key: "fitsTime", minutes: 30, whole: false },
+      { key: "heavy", level: "none" },
+    ]);
   });
 
   it("falls back to second mood, caveats and facts when no constraints apply", () => {
     const t = makeTitle({ vector: { laugh: 0.9, relax: 0.5 }, hasPrequelInDataset: true, averageScore: 81 });
     const q = contextToQuery(makeContext({ moods: [{ type: "laugh", weight: 1 }, { type: "relax", weight: 1 }] }), []);
-    assert.deepEqual(explain({ title: t, score: scoreTitle(t, q, MEDIAN) }, q), ["笑い度：高", "癒やし度：中", "※続編です（前作あり）"]);
+    assert.deepEqual(explain({ title: t, score: scoreTitle(t, q, MEDIAN) }, q), [
+      { key: "mood", dim: "laugh", level: "high" },
+      { key: "mood", dim: "relax", level: "mid" },
+      { key: "sequel" },
+    ]);
   });
 });
+
+describe("rank: format / completed (hard) and era / popularity (soft)", () => {
+  const ctx = (over: Parameters<typeof makeContext>[0]) => contextToQuery(makeContext(over), []);
+
+  it("format and completed-only filter, and are never relaxed", () => {
+    const movie = makeTitle({ format: "MOVIE", episodes: 1, duration: 100, vector: funny });
+    const series = makeTitle({ vector: { laugh: 1, cry: 0.6 } });
+    const airing = makeTitle({ status: "RELEASING", vector: { laugh: 1, thrill: 0.8 } });
+    const titles = [movie, series, airing];
+    assert.deepEqual(ids(rank(titles, ctx({ format: "movie" }), MEDIAN)), [movie.id]);
+    assert.deepEqual(ids(rank(titles, ctx({ format: "series" }), MEDIAN)).sort(), [series.id, airing.id].sort());
+    // Only 2 titles remain, so soft constraints get relaxed — but the airing title must still be excluded.
+    const done = rank(titles, ctx({ completedOnly: true }), MEDIAN);
+    assert.deepEqual(ids(done).sort(), [movie.id, series.id].sort());
+  });
+
+  it("era and popularity are small bonuses, not filters", () => {
+    const recent = makeTitle({ year: REFERENCE_YEAR - 1, vector: funny });
+    const old = makeTitle({ year: 2005, vector: { laugh: 1, cry: 0.6 } }); // distinct enough for diversity
+    const q = ctx({ era: "recent" });
+    assert.equal(scoreTitle(recent, q, MEDIAN).eraBonus, ERA_BONUS);
+    assert.equal(scoreTitle(old, q, MEDIAN).eraBonus, 0);
+    assert.equal(scoreTitle(old, ctx({ era: "classic" }), MEDIAN).eraBonus, ERA_BONUS);
+    assert.equal(rank([recent, old], q, MEDIAN).results.length, 2, "old titles are still candidates");
+
+    const gem = makeTitle({ popularityPct: 0.8, averageScore: 82, vector: funny });
+    const famous = makeTitle({ popularityPct: 0.05, averageScore: 82, vector: funny });
+    const obscureButWeak = makeTitle({ popularityPct: 0.8, averageScore: 60, vector: funny });
+    assert.equal(scoreTitle(gem, ctx({ popularity: "hidden-gem" }), MEDIAN).popularityBonus, POPULARITY_BONUS);
+    assert.equal(scoreTitle(obscureButWeak, ctx({ popularity: "hidden-gem" }), MEDIAN).popularityBonus, 0);
+    assert.equal(scoreTitle(famous, ctx({ popularity: "famous" }), MEDIAN).popularityBonus, POPULARITY_BONUS);
+    assert.equal(scoreTitle(famous, ctx({ popularity: "hidden-gem" }), MEDIAN).popularityBonus, 0);
+  });
+
+  it("explains era / popularity / completed only when requested and satisfied", () => {
+    const t = makeTitle({ year: REFERENCE_YEAR - 2, popularityPct: 0.7, averageScore: 85, vector: funny });
+    const q = ctx({ era: "recent", popularity: "hidden-gem", completedOnly: true });
+    const reasons = explain({ title: t, score: scoreTitle(t, q, MEDIAN) }, q);
+    assert.deepEqual(reasons, [
+      { key: "mood", dim: "laugh", level: "high" },
+      { key: "completed" },
+      { key: "era", era: "recent", year: REFERENCE_YEAR - 2 },
+    ]);
+  });
+});
+
+describe("rank: more results (limit)", () => {
+  const titles = Array.from({ length: 12 }, (_, i) =>
+    makeTitle({ vector: { laugh: 1, [["cry", "thrill", "relax", "think", "romance", "dark"][i % 6]]: 0.3 + 0.1 * Math.floor(i / 6) } }),
+  );
+  const q = contextToQuery(makeContext(), []);
+
+  it("returns up to `limit`, and the first page never changes", () => {
+    const page1 = ids(rank(titles, q, MEDIAN));
+    const page2 = ids(rank(titles, q, MEDIAN, 6));
+    assert.equal(page1.length, 3);
+    assert.equal(page2.length, 6);
+    assert.deepEqual(page2.slice(0, 3), page1);
+    assert.ok(rank(titles, q, MEDIAN, 100).results.length <= MAX_RESULTS);
+  });
+});
+

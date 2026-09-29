@@ -4,6 +4,7 @@
 import { DATASET, type Title } from "../src/lib/dataset";
 import { GENRE_WEIGHTS, TAG_WEIGHTS } from "../src/data/tagMapping";
 import { AVOID_KEYS, AVOID_MAP, DEFAULT_EXCLUDE_GENRES, FAMILY_EXCLUDE } from "../src/data/avoidMap";
+import { ja } from "../src/i18n/ja";
 import { matchesAvoid, isExcludedByDefault, isFamilyUnsafe } from "../src/lib/engine/filters";
 import { vectorizeAll, rawVector, GENRE_RANK, MIN_TAG_RANK, NORMALIZE_PERCENTILE } from "../src/lib/vectorize";
 import { DIMENSIONS, cosineSimilarity, type Dimension } from "../src/lib/vector";
@@ -109,6 +110,6 @@ console.log(`## Titles excluded\n\nDefault (${DEFAULT_EXCLUDE_GENRES.join(", ")}
 console.log(`| Key | Label | of all ${titles.length} | of ${pool.length} recommendable |\n|---|---|---|---|`);
 for (const k of AVOID_KEYS) {
   const pred = (t: Title) => matchesAvoid(t, k);
-  console.log(`| ${k} | ${AVOID_MAP[k].label} | ${count(titles, pred)} | ${count(pool, pred)} |`);
+  console.log(`| ${k} | ${ja.avoid[k]} | ${count(titles, pred)} | ${count(pool, pred)} |`);
 }
 console.log(`| (family filter) | 家族向け | ${count(titles, isFamilyUnsafe)} | ${count(pool, isFamilyUnsafe)} |`);

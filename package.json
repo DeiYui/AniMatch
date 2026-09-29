@@ -12,7 +12,9 @@
     "report:vectors": "tsx scripts/report-vectors.ts",
     "test": "tsx --test \"src/**/*.test.ts\"",
     "try": "tsx scripts/try.ts",
-    "showcase": "tsx scripts/showcase.ts"
+    "showcase": "tsx scripts/showcase.ts",
+    "eval:context": "tsx scripts/eval-context.ts",
+    "fetch:covers": "tsx scripts/fetch-covers.ts"
   },
   "dependencies": {
     "@google/genai": "^2.24.0",
@@ -28,6 +30,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.2",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5"

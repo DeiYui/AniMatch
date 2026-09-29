@@ -4,6 +4,8 @@ import { z } from "zod";
 
 export const FORMATS = ["TV", "TV_SHORT", "MOVIE", "OVA", "ONA"] as const;
 
+export const STATUSES = ["FINISHED", "RELEASING", "NOT_YET_RELEASED", "CANCELLED", "HIATUS"] as const;
+
 // Only these relation types matter for franchise grouping / "start from season 1".
 export const RELATION_TYPES = ["SEQUEL", "PREQUEL", "PARENT", "SIDE_STORY"] as const;
 
@@ -25,11 +27,14 @@ export const AnimeSchema = z.object({
   genres: z.array(z.string()).min(1),
   tags: z.array(AnimeTagSchema).min(1),
   format: z.enum(FORMATS),
+  status: z.enum(STATUSES),
+  year: z.number().int().nullable(), // seasonYear, else the start date's year
   episodes: z.number().int().positive(),
   duration: z.number().int().positive(), // minutes per episode
   averageScore: z.number().int().nullable(),
   popularity: z.number().int(),
   coverImage: z.string().url(),
+  coverColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).nullable(), // AniList's dominant cover colour; tints the card
   siteUrl: z.string().url(),
   relations: z.array(z.object({ type: z.enum(RELATION_TYPES), id: z.number().int() })),
 });

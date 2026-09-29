@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 👍/👎 feedback log (local only)
+/logs/
+
+# Cover images (npm run fetch:covers); not committed, see README
+/public/covers/

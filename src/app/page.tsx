@@ -1,260 +1,254 @@
 // src/app/page.tsx
+// AniMatch (layout: docs/ui-mockup.html). The sentence is the product; quick picks are for speed; both produce the
+// same Context. → what the system understood (editable sentence) → #1 hero + #2/#3, 「もっと見る」 up to 9.
+// ?parser=rules forces the rule-based parser (demo without AI). ?lang=en|ja picks the UI language.
 "use client";
 
-import { useState } from "react";
-import { animeList } from "@/data/animeList";
-import { getRecommendations } from "@/utils/engine";
-import { UserPreference, Anime } from "@/types";
+import { useEffect, useRef, useState } from "react";
+import type { RecommendRequest, RecommendResponse } from "@/lib/api";
+import { MAX_INPUT_CHARS, type Context } from "@/lib/context/schema";
+import { emptyContext } from "@/lib/context/quickPicks";
+import { MAX_RESULTS, TOP_K } from "@/lib/engine/rank";
+import { LangToggle } from "@/app/components/LangToggle";
+import { QuickPicks } from "@/app/components/QuickPicks";
+import { Understood } from "@/app/components/Understood";
+import { ResultCard } from "@/app/components/ResultCard";
+import { useLang } from "@/i18n/LangProvider";
+
+const PLACEHOLDER_INTERVAL_MS = 3500;
 
 export default function Home() {
-  // --- STATE ---
-  const [preferences, setPreferences] = useState<UserPreference>({
-    romance: 0.5,
-    action: 0.5,
-    drama: 0.5,
-    complexity: 0.5,
-    visuals: 0.5,
-  });
+  const { t } = useLang();
+  const [text, setText] = useState("");
+  const [submittedText, setSubmittedText] = useState<string | null>(null);
+  const [data, setData] = useState<RecommendResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [forceRules, setForceRules] = useState(false);
+  const [limit, setLimit] = useState(TOP_K);
+  const [exampleIndex, setExampleIndex] = useState(0);
+  const [inputFocused, setInputFocused] = useState(false);
+  const [echo, setEcho] = useState<string | null>(null); // the typed text behind the current results, if any
+  // Picks stay tappable while a request is in flight; only the latest request's response is shown.
+  const latestRequest = useRef(0);
 
-  // Removed 'reason' from state type since we deleted the Explainable AI part
-  const [results, setResults] = useState<(Anime & { score: number })[]>([]);
-  const [isAnimating, setIsAnimating] = useState(false);
+  // Read ?parser=rules after mount (no hydration mismatch), and warm the LLM up unless it's disabled.
+  useEffect(() => {
+    const rulesOnly = new URLSearchParams(window.location.search).get("parser") === "rules";
+    setForceRules(rulesOnly);
+    if (!rulesOnly) fetch("/api/warmup", { method: "POST" }).catch(() => {});
+  }, []);
 
-  // --- CONFIG ---
-  const featuresList = [
-    { key: "romance", label: "Romance (Love)" },
-    { key: "action", label: "Action (Fights)" },
-    { key: "drama", label: "Drama (Tears)" },
-    { key: "complexity", label: "Complexity (Plot)" },
-    { key: "visuals", label: "Visuals (Art)" },
-  ] as const;
+  // Example sentences rotate in the placeholder; paused while the input is focused or has text.
+  useEffect(() => {
+    if (inputFocused || text) return;
+    const id = setInterval(() => setExampleIndex((i) => i + 1), PLACEHOLDER_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [inputFocused, text]);
+  const examples = t.input.examples;
+  const placeholder = t.input.placeholder(examples[exampleIndex % examples.length]);
 
-  // --- HELPERS ---
-  const getIntensityLabel = (value: number) => {
-    if (value <= 0.0) return { text: "None", color: "text-gray-500", barColor: "bg-gray-700" };
-    if (value <= 0.25) return { text: "Mild", color: "text-blue-300", barColor: "bg-blue-900" };
-    if (value <= 0.5) return { text: "Balanced", color: "text-green-400", barColor: "bg-green-600" };
-    if (value <= 0.75) return { text: "High", color: "text-purple-400", barColor: "bg-purple-600" };
-    return { text: "Max / Intense", color: "text-pink-500 font-bold", barColor: "bg-gradient-to-r from-purple-500 to-pink-500" };
+  const request = async (body: RecommendRequest) => {
+    const id = ++latestRequest.current;
+    setLoading(true);
+    setError(false);
+    try {
+      const res = await fetch("/api/recommend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json: RecommendResponse = await res.json();
+      if (id !== latestRequest.current) return; // a newer request was sent meanwhile
+      // Re-ranks don't parse, so keep the last parse info (badge latency) while the source stays the same.
+      setData((prev) => ({
+        ...json,
+        parse: json.parse ?? (prev && prev.context.source === json.context.source ? prev.parse : null),
+      }));
+    } catch {
+      if (id === latestRequest.current) setError(true);
+    } finally {
+      if (id === latestRequest.current) setLoading(false);
+    }
   };
 
-  const handleSliderChange = (key: keyof UserPreference, value: number) => {
-    setPreferences((prev) => ({ ...prev, [key]: value }));
+  const submit = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed || loading) return;
+    setSubmittedText(trimmed);
+    setEcho(trimmed);
+    setLimit(TOP_K);
+    // Quick picks chosen before typing are merged with what the sentence says.
+    const base = data?.context.source === "manual" ? data.context : undefined;
+    request({ text: trimmed, parser: forceRules ? "rules" : "auto", base });
   };
 
-  const handleSurpriseMe = () => {
-    setIsAnimating(true);
-    const randomStep = () => Math.floor(Math.random() * 5) * 0.25;
-    
-    const newPrefs = {
-      romance: randomStep(),
-      action: randomStep(),
-      drama: randomStep(),
-      complexity: randomStep(),
-      visuals: randomStep(),
-    };
-
-    setPreferences(newPrefs);
-    
-    setTimeout(() => {
-        // Just get recommendations, no reasoning logic
-        const recs = getRecommendations(newPrefs, animeList, 3);
-        setResults(recs);
-        setIsAnimating(false);
-    }, 400);
+  // Sentence tokens and quick picks re-rank on the server without parsing any text.
+  const changeContext = (next: Context) => {
+    setLimit(TOP_K);
+    setEcho(null); // the conditions no longer come straight from the typed text
+    request({ context: next });
   };
 
-  const handleRecommend = () => {
-    const topPicks = getRecommendations(preferences, animeList, 3);
-    setResults(topPicks);
+  const showMore = () => {
+    if (!data) return;
+    const next = Math.min(limit + TOP_K, MAX_RESULTS);
+    setLimit(next);
+    request({ context: data.context, limit: next });
   };
 
-  // --- RENDER ---
+  const sendFeedback = async (animeId: number, rank: number, vote: "up" | "down") => {
+    if (!data) return;
+    const res = await fetch("/api/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ animeId, rank, vote, text: submittedText, context: data.context }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  };
+
+  const results = data?.results ?? [];
+  // 👍/👎 state belongs to a result list; a new context means new cards.
+  const cardKey = (id: number) => `${id}:${JSON.stringify(data?.context)}`;
+  const card = (i: number, variant: "hero" | "small", delay = 0) => (
+    <ResultCard
+      key={cardKey(results[i].id)}
+      result={results[i]}
+      rank={i + 1}
+      variant={variant}
+      delay={delay}
+      onVote={(vote) => sendFeedback(results[i].id, i + 1, vote)}
+    />
+  );
+
   return (
-    // ✨ Dark Luxury Background
-    <main className="min-h-screen bg-gray-950 text-white p-6 font-sans selection:bg-purple-500 selection:text-white relative overflow-hidden">
-      
-      {/* 🌌 AMBIENT BACKGROUND LIGHTS */}
-      <div className="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-900/20 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-900/10 rounded-full blur-[120px]" />
-      </div>
-
-      <div className="max-w-6xl mx-auto"> 
-        
-        {/* HEADER: Clean & Simple */}
-        <header className="mb-12 text-center">
-          <h1 className="text-6xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 tracking-tighter drop-shadow-2xl">
-            AniMatch AI
-          </h1>
+    <main className="min-h-screen bg-night">
+      <div className="mx-auto max-w-[1120px] px-4 pb-16 pt-5 sm:px-8 sm:pb-20 sm:pt-7">
+        <header className="mb-8 flex items-center justify-between sm:mb-14">
+          <div className="font-display text-[22px] tracking-[0.02em]">AniMatch</div>
+          <LangToggle />
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          
-          {/* LEFT: INPUTS (4 Columns) */}
-          <section className="lg:col-span-4 bg-[#111]/80 backdrop-blur-md p-6 rounded-3xl border border-gray-800 shadow-2xl h-fit sticky top-6">
-            <div className="flex flex-col gap-4 mb-6 border-b border-gray-800 pb-4">
-                {/* 😺 Updated Title */}
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                   😺 What is your mood today?
-                </h2>
-                
-                {/* 🎲 SURPRISE ME BUTTON */}
-                <button 
-                    onClick={handleSurpriseMe}
-                    className="w-full text-sm font-medium bg-gray-800 hover:bg-gray-700 hover:text-white text-purple-300 px-4 py-3 rounded-xl transition-all border border-gray-700 flex items-center justify-center gap-2 shadow-lg hover:shadow-purple-500/20 group"
-                >
-                    <span className="text-lg group-hover:rotate-12 transition-transform">🎲</span> 
-                    Surprise Me (Random)
-                </button>
-            </div>
+        {forceRules && <p className="mb-4 text-sm text-muted">{t.header.rulesOnly}</p>}
 
-            <div className={`space-y-7 ${isAnimating ? 'opacity-50 pointer-events-none' : ''} transition-opacity`}>
-              {featuresList.map((feature) => {
-                const info = getIntensityLabel(preferences[feature.key]);
-                return (
-                  <div key={feature.key} className="group">
-                    <div className="flex justify-between items-end mb-2">
-                      <label className="text-sm font-semibold text-gray-400 group-hover:text-white transition-colors">
-                        {feature.label}
-                      </label>
-                      <span className={`text-xs ${info.color} font-mono`}>
-                        {info.text}
-                      </span>
-                    </div>
-                    
-                    <div className="relative h-4 w-full flex items-center">
-                        <div className="absolute w-full h-2 bg-gray-900 rounded-full overflow-hidden shadow-inner">
-                            <div 
-                                className={`h-full ${info.barColor} transition-all duration-300 ease-out`} 
-                                style={{ width: `${preferences[feature.key] * 100}%` }}
-                            />
-                        </div>
-                        <input
-                            type="range"
-                            min="0" max="1" step="0.25"
-                            value={preferences[feature.key]}
-                            onChange={(e) => handleSliderChange(feature.key as keyof UserPreference, parseFloat(e.target.value))}
-                            className="absolute w-full h-full opacity-0 cursor-pointer z-10"
-                        />
-                        <div 
-                            className="absolute h-5 w-5 bg-white rounded-full shadow-lg border-2 border-gray-800 pointer-events-none transition-all duration-300"
-                            style={{ left: `calc(${preferences[feature.key] * 100}% - 10px)` }}
-                        />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+        <h1 className="mb-[22px] mt-0 font-display text-[34px] font-normal leading-[1.15] sm:text-[clamp(34px,5vw,56px)]">
+          {t.header.headline}
+        </h1>
 
-            <button
-              onClick={handleRecommend}
-              className="w-full mt-8 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-4 px-4 rounded-xl transition-all transform hover:scale-[1.02] active:scale-95 shadow-xl shadow-purple-900/30 text-lg"
-            >
-              Find My Match ✨
-            </button>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            submit(text);
+          }}
+          className="flex items-center gap-2.5 rounded-card border border-line bg-panel py-2 pl-5 pr-2 focus-within:border-muted sm:pl-[22px]"
+        >
+          <label htmlFor="situation" className="sr-only">
+            {t.input.label}
+          </label>
+          <input
+            id="situation"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onFocus={() => setInputFocused(true)}
+            onBlur={() => setInputFocused(false)}
+            // Don't submit while a Japanese IME is still converting.
+            onKeyDown={(e) => e.key === "Enter" && e.nativeEvent.isComposing && e.preventDefault()}
+            placeholder={placeholder}
+            maxLength={MAX_INPUT_CHARS}
+            autoComplete="off"
+            className="min-w-0 flex-1 bg-transparent py-3 text-[17px] text-paper outline-none placeholder:text-faint sm:text-xl"
+          />
+          <button
+            type="submit"
+            disabled={loading || !text.trim()}
+            className="rounded-box bg-lamp px-[18px] py-3 text-[17px] font-bold text-lamp-ink disabled:opacity-50 sm:px-[26px] sm:py-3.5"
+          >
+            {loading && text.trim() ? t.input.submitting : t.input.submit}
+          </button>
+        </form>
+
+        <QuickPicks context={data?.context ?? emptyContext()} onChange={changeContext} />
+
+        {error && (
+          <p role="alert" className="mt-10 text-lamp">
+            {t.states.error}
+          </p>
+        )}
+
+        {!data && loading && <Skeleton />}
+
+        {/* Not something we can answer (gibberish, or not about anime): say so plainly; the quick picks are right above. */}
+        {data && data.intent !== "recommend" && (
+          <section role="status" className="mt-10 rounded-card border border-line bg-panel px-5 py-5 sm:mt-[52px] sm:px-6">
+            {echo && <p className="m-0 mb-1 text-muted">{t.understood.input(echo)}</p>}
+            <p className="m-0 text-lg">{data.intent === "off_topic" ? t.intent.off_topic : t.intent.unclear}</p>
           </section>
+        )}
 
-          {/* RIGHT: RESULTS (8 Columns) */}
-          <section className="lg:col-span-8 space-y-6">
-            <h2 className="text-2xl font-bold text-gray-200 mb-6 flex items-center gap-2">
-              🎯 Top Picks
-            </h2>
+        {data && data.intent === "recommend" && (
+          <div aria-busy={loading} className={`transition-opacity ${loading ? "opacity-50" : ""}`}>
+            <Understood
+              context={data.context}
+              parse={data.parse}
+              notices={data.notices}
+              open={data.mode === "open"}
+              inputText={echo}
+              onChange={changeContext}
+            />
 
             {results.length === 0 ? (
-              <div className="h-[500px] flex flex-col items-center justify-center border-2 border-dashed border-gray-800 rounded-3xl text-gray-600 bg-[#111]/50">
-                <div className="text-7xl mb-6 opacity-20 animate-pulse">📡</div>
-                <p className="text-xl font-medium text-gray-400">Waiting for context signal...</p>
-                <p className="text-sm mt-2 max-w-xs text-center">Adjust the sliders or roll the dice.</p>
-              </div>
+              <p className="py-12 text-center text-muted">{t.states.empty}</p>
             ) : (
-              <div className="space-y-6">
-                {results.map((anime, index) => {
-                  const isTopPick = index === 0;
-
-                  return (
-                    <div
-                      key={anime.id}
-                      className={`
-                        group relative rounded-3xl flex gap-6 border transition-all duration-500
-                        ${isTopPick 
-                            ? 'bg-gradient-to-r from-[#1a1a1a] to-[#222] border-yellow-500/50 p-6 shadow-2xl shadow-yellow-900/10 scale-[1.02]' 
-                            : 'bg-[#111] border-gray-800 p-4 hover:border-gray-600'
-                        }
-                      `}
-                    >
-                      {/* 👑 CROWN & RANK BADGE */}
-                      <div className={`
-                        absolute -top-4 -left-4 w-10 h-10 font-bold rounded-full flex items-center justify-center shadow-lg border-4 border-[#0a0a0a] z-20
-                        ${isTopPick ? 'bg-yellow-500 text-black text-xl' : 'bg-gray-700 text-white'}
-                      `}>
-                          {isTopPick ? '1' : index + 1}
-                      </div>
-
-                      {/* 👑 Crown Animation for Top 1 */}
-                      {isTopPick && (
-                        <div className="absolute -top-10 -left-6 text-4xl animate-bounce drop-shadow-lg z-20">
-                            👑
-                        </div>
-                      )}
-
-                      {/* Poster */}
-                      <div className={`
-                        flex-shrink-0 rounded-xl overflow-hidden relative shadow-lg bg-gray-800
-                        ${isTopPick ? 'w-40 h-56' : 'w-24 h-36'} 
-                      `}>
-                        <img 
-                          src={anime.coverImage} 
-                          alt={anime.title} 
-                          className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700" 
-                        />
-                      </div>
-
-                      {/* Content */}
-                      <div className="flex-1 flex flex-col justify-between py-1">
-                          <div>
-                              <div className="flex justify-between items-start">
-                                  <h3 className={`font-bold text-white transition-colors ${isTopPick ? 'text-3xl text-yellow-100' : 'text-xl group-hover:text-purple-300'}`}>
-                                      {anime.title}
-                                  </h3>
-                                  
-                                  {/* Score Badge */}
-                                  <div className="text-right">
-                                      <span className={`block font-black text-transparent bg-clip-text ${isTopPick ? 'text-4xl bg-gradient-to-br from-yellow-300 to-yellow-600' : 'text-2xl bg-gradient-to-br from-white to-gray-500'}`}>
-                                          {(anime.score * 100).toFixed(0)}%
-                                      </span>
-                                  </div>
-                              </div>
-
-                              {/* REMOVED: "Why" Reasoning Section */}
-                              
-                              <p className={`text-gray-400 mt-3 line-clamp-2 leading-relaxed ${isTopPick ? 'text-base' : 'text-sm'}`}>
-                                  {anime.description}
-                              </p>
-                          </div>
-
-                          {/* Vector Visualization Bar */}
-                          <div className="mt-4">
-                             <div className="flex justify-between text-[10px] text-gray-600 uppercase mb-1 font-bold">
-                                  <span>Romance</span><span>Action</span><span>Drama</span><span>Complexity</span><span>Visuals</span>
-                             </div>
-                             <div className="flex gap-1 h-2 w-full bg-gray-900 rounded-full overflow-hidden">
-                                  <div className="bg-pink-500" style={{ width: `${anime.features.romance * 20}%` }} />
-                                  <div className="bg-blue-500" style={{ width: `${anime.features.action * 20}%` }} />
-                                  <div className="bg-yellow-500" style={{ width: `${anime.features.drama * 20}%` }} />
-                                  <div className="bg-green-500" style={{ width: `${anime.features.complexity * 20}%` }} />
-                                  <div className="bg-purple-500" style={{ width: `${anime.features.visuals * 20}%` }} />
-                             </div>
-                          </div>
-                      </div>
+              <section aria-label={t.context.heading} className="grid gap-[18px]">
+                <div className="grid gap-[18px] lg:grid-cols-[1.35fr_1fr]">
+                  {card(0, "hero")}
+                  {results.length > 1 && (
+                    <div className="grid content-start gap-[18px]">
+                      {results.slice(1, 3).map((_, j) => card(j + 1, "small", 0.08 * (j + 1)))}
                     </div>
-                  );
-                })}
-              </div>
+                  )}
+                </div>
+                {results.length > 3 && (
+                  <div className="grid gap-[18px] md:grid-cols-2 lg:grid-cols-3">
+                    {results.slice(3).map((_, j) => card(j + 3, "small", 0.05 * (j % 3)))}
+                  </div>
+                )}
+              </section>
             )}
-          </section>
-        </div>
+
+            {data.hasMore && (
+              <button
+                type="button"
+                onClick={showMore}
+                disabled={loading}
+                className="mx-auto mt-[26px] block rounded-full border border-line px-[22px] py-2.5 text-[15px] hover:border-muted disabled:opacity-50"
+              >
+                {t.states.more}
+              </button>
+            )}
+          </div>
+        )}
+
+        <footer className="mt-[60px] border-t border-line pt-3.5 text-[13px] text-faint">
+          {t.footer.data}
+          <a href="https://anilist.co" target="_blank" rel="noopener noreferrer" className="hover:text-muted">
+            AniList
+          </a>
+        </footer>
       </div>
     </main>
+  );
+}
+
+function Skeleton() {
+  return (
+    <div aria-hidden className="mt-[52px] grid animate-pulse gap-[18px] lg:grid-cols-[1.35fr_1fr]">
+      <div className="h-[340px] rounded-card bg-panel" />
+      <div className="grid gap-[18px]">
+        <div className="h-[160px] rounded-card bg-panel" />
+        <div className="h-[160px] rounded-card bg-panel" />
+      </div>
+    </div>
   );
 }

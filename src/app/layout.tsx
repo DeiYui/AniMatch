@@ -1,27 +1,28 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Noto_Sans_JP } from "next/font/google";
+import { Dela_Gothic_One, Zen_Kaku_Gothic_New } from "next/font/google";
 import "./globals.css";
+import { LangProvider } from "@/i18n/LangProvider";
+import { ja } from "@/i18n/ja";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Dela Gothic One: logo and headline only. Zen Kaku Gothic New: everything else.
+// Japanese glyphs come as unicode-range slices, so there's nothing useful to preload.
+const delaGothic = Dela_Gothic_One({
+  variable: "--font-dela-gothic",
+  weight: "400",
   subsets: ["latin"],
+  preload: false,
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-// Geist has no Japanese glyphs; Noto Sans JP is the fallback for kana/kanji.
-const notoSansJP = Noto_Sans_JP({
-  variable: "--font-noto-sans-jp",
+const zenKaku = Zen_Kaku_Gothic_New({
+  variable: "--font-zen-kaku",
+  weight: ["400", "500", "700"],
   subsets: ["latin"],
   preload: false,
 });
 
 export const metadata: Metadata = {
-  title: "AniMatch — 今の気分からアニメを探す",
-  description: "今の状況を一文で書くと、理由つきでアニメを3本おすすめします。",
+  // The <title> is rendered by LangProvider so it follows the UI language; the description stays JA (default).
+  description: ja.meta.description,
 };
 
 export default function RootLayout({
@@ -31,10 +32,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${notoSansJP.variable} antialiased`}
-      >
-        {children}
+      <body className={`${delaGothic.variable} ${zenKaku.variable} antialiased`}>
+        <LangProvider>{children}</LangProvider>
       </body>
     </html>
   );
